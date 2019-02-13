@@ -1,0 +1,36 @@
+{
+  "name": "anime-desktop-notifier",
+  "version": "0.0.1",
+  "description": "Get a desktop notification when an anime you're watching has aired a new episode",
+  "author": {
+    "email": "root@kurozeropb.info",
+    "name": "KurozeroPB",
+    "url": "https://kurozeropb.info"
+  },
+  "main": "src/app.js",
+  "license": "MIT",
+  "keywords": [],
+  "homepage": "https://kurozeropb.info",
+  "bugs": {
+    "email": "root@kurozeropb.info",
+    "url": "https://github.com/KurozeroPB/anime-desktop-notifier/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KurozeroPB/anime-desktop-notifier.git"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "fix": "eslint . --fix",
+    "start": "yarn lint && node src/app.js",
+    "dev": "node src/app.js"
+  },
+  "dependencies": {
+    "kitsu": "^6.5.1",
+    "node-notifier": "^5.4.0",
+    "rss-emitter-ts": "^0.0.5"
+  },
+  "devDependencies": {
+    "eslint": "^5.13.0"
+  }
+}
