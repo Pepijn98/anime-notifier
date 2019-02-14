@@ -21,6 +21,17 @@ const stripHorriblesubs = (str) => {
 };
 
 /**
+ * Async wrapper for forEach
+ *
+ * @param {Iterable} a The array to iterate over
+ * @param {Function} cb An async callback function
+ */
+const foreachAsync = async (a, cb) => {
+    for (let i = 0; i < a.length; i++)
+        await cb(a[i], i, a);
+};
+
+/**
  * Main function (using it this way because nodejs does not allow top-level await)
  *
  * @returns {Promise<void>}
@@ -63,8 +74,9 @@ async function main() {
         let watching = false;
         let title = "";
         let kitsuTitle = "";
-        airing.forEach((anime) => {
-            let stripped = stripHorriblesubs(item.title);
+
+        await foreachAsync(airing, async (anime) => {
+            let stripped = await stripHorriblesubs(item.title);
             title = stripped.toLowerCase().replace(/ /g, "-").replace(/---/g, "-");
             kitsuTitle = title.replace("s3", "III"); // Kitsu uses III, horriblesubs uses S3, good shit
             if (anime.indexOf(kitsuTitle) !== -1) {
