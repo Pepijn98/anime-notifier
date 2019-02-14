@@ -63,45 +63,54 @@ async function main() {
     // Push titles to array
     let airing = [];
     for (let entry of library.data) {
-        airing.push(entry.anime.slug);
+        airing.push({
+            slug: entry.anime.slug,
+            title: entry.anime.canonicalTitle || entry.anime.titles ? entry.anime.titles.en_jp || entry.anime.titles.en : entry.anime.slug
+        });
     }
 
     // Create rss feed emitter and add nyaa's feed for horriblesubs
     const rss = new Rss.FeedEmitter();
-    rss.add({ url: "https://nyaa.si/?page=rss&u=HorribleSubs&q=1080", ignoreFirst: true, refresh: 10000 });
+    rss.add({ url: "https://nyaa.si/?page=rss&u=HorribleSubs&q=1080", ignoreFirst: false, refresh: 10000 });
 
     rss.on("item:new", async (item) => {
         let watching = false;
         let title = "";
         let kitsuTitle = "";
+        let notStripped = "";
+        let animeTitle = "";
 
         await foreachAsync(airing, async (anime) => {
+            notStripped = item.title;
             let stripped = await stripHorriblesubs(item.title);
             title = stripped.toLowerCase().replace(/ /g, "-").replace(/---/g, "-");
             kitsuTitle = title.replace("s3", "III"); // Kitsu uses III, horriblesubs uses S3, good shit
-            if (anime.indexOf(kitsuTitle) !== -1) {
+            if (anime.slug.indexOf(kitsuTitle) !== -1) {
+                animeTitle = anime.title;
                 watching = true;
             }
         });
 
         if (watching) {
-            const episode = kitsuTitle.match(/\d+/)[0];
-            const anime = await kitsu.get("anime", {
-                filters: {
-                    slug: kitsuTitle
-                }
-            });
-            const animeTitle = anime.data[0].canonicalTitle || anime.data[0].titles ? anime.data[0].titles.en_jp || anime.data[0].titles.en : title;
+            const numbers = notStripped.match(/\d+/);
+            let episode = "";
+            if (item.title.indexOf("Date A Live") !== -1)
+                episode = numbers ? numbers[1] : "00";
+            else
+                episode = numbers ? numbers[0] : "00";
 
             // Temporary debug logs to see if what I did works
-            console.log(`title: ${title}`);
-            console.log(`kitsuTitle: ${kitsuTitle}`);
-            console.log(`episode: ${episode}`);
-            console.log(`animeTitle: ${animeTitle}`);
+            // console.log(`title: ${title}`);
+            // console.log(`kitsuTitle: ${kitsuTitle}`);
+            // console.log(`episode: ${episode}`);
+            // console.log(`animeTitle: ${animeTitle}`);
 
+            // Notification message should look like:
+            // <anime_name> episode #<episode_num> just aired
+            // <url_to_new_episode>
             notifier.notify({
                 title: "Anime Notifier",
-                message: `${animeTitle} episode #${episode} just aired\nhttps://horriblesubs.info/shows/${title}#${episode}` // <anime_name> episode #<episode_num> just aired
+                message: `${animeTitle} episode #${episode} just aired\nhttps://horriblesubs.info/shows/${title}#${episode}`
             });
         }
     });
