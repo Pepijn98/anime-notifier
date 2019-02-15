@@ -7,7 +7,7 @@
     "name": "KurozeroPB",
     "url": "https://kurozeropb.info"
   },
-  "main": "src/app.js",
+  "main": "src/notifier.js",
   "license": "MIT",
   "keywords": [],
   "homepage": "https://kurozeropb.info",
