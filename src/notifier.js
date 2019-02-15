@@ -69,7 +69,7 @@ const foreachAsync = async (a, cb) => {
  */
 const sendPushNotification = async (client, title, body) => {
     try {
-        let json = await readFileAsync("./notificationId.json", { encoding: "utf8" });
+        let json = await readFileAsync(join(__dirname, "notificationId.json"), { encoding: "utf8" });
         json = JSON.parse(json);
         json.notificationId++;
 
@@ -77,7 +77,7 @@ const sendPushNotification = async (client, title, body) => {
         if (json.notificationId === 999)
             json.notificationId++;
 
-        await writeFileAsync("./notificationId.json", JSON.stringify(json), { encoding: "utf8" });
+        await writeFileAsync(join(__dirname, "notificationId.json"), JSON.stringify(json), { encoding: "utf8" });
 
         return await client.publishToInterests(["anime.new"], {
             fcm: {
