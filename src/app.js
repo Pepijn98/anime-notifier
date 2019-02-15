@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const notifier = require("node-notifier");
 const Kitsu = require("kitsu");
 const Rss = require("rss-emitter-ts");
@@ -71,7 +73,7 @@ async function main() {
 
     // Create rss feed emitter and add nyaa's feed for horriblesubs
     const rss = new Rss.FeedEmitter();
-    rss.add({ url: "https://nyaa.si/?page=rss&u=HorribleSubs&q=1080", ignoreFirst: false, refresh: 10000 });
+    rss.add({ url: "https://nyaa.si/?page=rss&u=HorribleSubs&q=1080", ignoreFirst: true, refresh: 10000 });
 
     rss.on("item:new", async (item) => {
         let watching = false;
