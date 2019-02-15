@@ -3,9 +3,9 @@ Description=Anime Notifier
 
 [Service]
 # User=kurozero
-WorkingDirectory=/media/kurozero/Data/WebstormProjects/anime-desktop-notifier
+WorkingDirectory=/media/kurozero/Data/WebstormProjects/anime-notifier
 # Path to executable.
-ExecStart=/media/kurozero/Data/WebstormProjects/anime-desktop-notifier/src/notifier.js
+ExecStart=/media/kurozero/Data/WebstormProjects/anime-notifier/src/notifier.js
 SuccessExitStatus=143
 TimeoutStopSec=10
 Restart=on-failure

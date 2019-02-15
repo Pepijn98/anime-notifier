@@ -19,6 +19,9 @@ const { join } = require("path");
  * @property {string}  rss.url              - Rss feed url
  * @property {boolean} rss.ignoreFirst      - Ignore first few items when initialized
  * @property {number}  rss.refresh          - Refresh rate to check for new items
+ * @property {Object}  beams                - Beams push notification settings
+ * @property {string}  beams.instanceId     - Beams instance id
+ * @property {string}  beams.secretKey      - Beams secret key
  */
 
 /**
