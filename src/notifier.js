@@ -59,7 +59,7 @@ const foreachAsync = async (a, cb) => {
  * @returns {Promise<void>}
  */
 async function main() {
-    const tomlString = readFileSync(join(__dirname, "settings.toml"), { encoding: "utf8" });
+    const tomlString = readFileSync(join(__dirname, "..", "settings.toml"), { encoding: "utf8" });
     /** @type {Settings} */
     const settings = toml.parse(tomlString);
     const userAgent = `${settings.name}/v${settings.version} (${settings.repo})`;
