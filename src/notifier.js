@@ -5,7 +5,8 @@ const PushNotifications = require("@pusher/push-notifications-server");
 const Kitsu = require("kitsu");
 const Rss = require("rss-emitter-ts");
 const toml = require("toml");
-const { readFileSync } = require("fs");
+const { promisifyAll } = require("tsubaki");
+const { readFileAsync, writeFileAsync } = promisifyAll(require("fs"));
 const { join } = require("path");
 
 /**
@@ -68,11 +69,24 @@ const foreachAsync = async (a, cb) => {
  */
 const sendPushNotification = async (client, title, body) => {
     try {
-        return await client.publishToInterests(["anime:new"], {
+        let json = await readFileAsync("./notificationId.json", { encoding: "utf8" });
+        json = JSON.parse(json);
+        json.notificationId++;
+
+        // ID 999 is reserved for the default notification when launching the app
+        if (json.notificationId === 999)
+            json.notificationId++;
+
+        await writeFileAsync("./notificationId.json", JSON.stringify(json), { encoding: "utf8" });
+
+        return await client.publishToInterests(["anime.new"], {
             fcm: {
                 notification: {
                     title,
                     body
+                },
+                data: {
+                    notificationId: json.notificationId
                 }
             }
         });
@@ -87,7 +101,7 @@ const sendPushNotification = async (client, title, body) => {
  * @returns {Promise<void>}
  */
 async function main() {
-    const str = readFileSync(join(__dirname, "..", "settings.toml"), { encoding: "utf8" });
+    const str = await readFileAsync(join(__dirname, "..", "settings.toml"), { encoding: "utf8" });
     /** @type {Settings} */ const settings = toml.parse(str);
     const userAgent = `${settings.name}/v${settings.version} (${settings.repo})`;
 
@@ -180,8 +194,7 @@ async function main() {
                 message: `${animeTitle} episode #${episode} just aired\nhttps://horriblesubs.info/shows/${title}#${episode}`
             });
 
-            const response = await sendPushNotification(beams, "Anime Notifier", `${animeTitle} episode #${episode} just aired`);
-            console.log("Just published:", response.publishId);
+            await sendPushNotification(beams, animeTitle, `Episode #${episode} just got uploaded to horriblesubs`);
         }
     });
 
