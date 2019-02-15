@@ -1,0 +1,11 @@
+name = "Anime Desktop Notifier"
+version = "0.0.1"
+repo = "https://github.com/KurozeroPB/anime-desktop-notifier"
+
+[kitsu]
+username = "Kurozero"
+
+[rss]
+url = "https://nyaa.si/?page=rss&u=HorribleSubs&q=1080"
+ignoreFirst = true
+refresh = 10000

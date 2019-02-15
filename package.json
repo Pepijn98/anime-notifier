@@ -28,7 +28,8 @@
   "dependencies": {
     "kitsu": "^6.5.1",
     "node-notifier": "^5.4.0",
-    "rss-emitter-ts": "^0.0.5"
+    "rss-emitter-ts": "^0.0.5",
+    "toml": "^3.0.0"
   },
   "devDependencies": {
     "eslint": "^5.13.0"

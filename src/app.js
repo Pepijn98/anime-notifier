@@ -3,11 +3,29 @@
 const notifier = require("node-notifier");
 const Kitsu = require("kitsu");
 const Rss = require("rss-emitter-ts");
+const toml = require("toml");
+const { readFileSync } = require("fs");
+const { join } = require("path");
+
+/**
+ * Settings type definition
+ * @typedef {Object} Settings
+ * @property {string}  name                 - Project name
+ * @property {string}  version              - Project version
+ * @property {string}  repo                 - Project repo
+ * @property {Object}  kitsu                - Kitsu settings
+ * @property {string}  kitsu.username       - Kitsu username
+ * @property {Object}  rss                  - Rss settings
+ * @property {string}  rss.url              - Rss feed url
+ * @property {boolean} rss.ignoreFirst      - Ignore first few items when initialized
+ * @property {number}  rss.refresh          - Refresh rate to check for new items
+ */
 
 /**
  * Remove horriblesubs and any other stuff from the title
  *
  * @param {string} str The string to strip the horriblsubs garbage from
+ *
  * @returns {Promise<string>} returns the stripped string
  */
 const stripHorriblesubs = (str) => {
@@ -27,6 +45,8 @@ const stripHorriblesubs = (str) => {
  *
  * @param {Iterable} a The array to iterate over
  * @param {Function} cb An async callback function
+ *
+ * @returns {Promise<void>}
  */
 const foreachAsync = async (a, cb) => {
     for (let i = 0; i < a.length; i++)
@@ -39,10 +59,23 @@ const foreachAsync = async (a, cb) => {
  * @returns {Promise<void>}
  */
 async function main() {
-    const kitsu = new Kitsu();
+    const tomlString = readFileSync(join(__dirname, "settings.toml"), { encoding: "utf8" });
+    /** @type {Settings} */
+    const settings = toml.parse(tomlString);
+    const userAgent = `${settings.name}/v${settings.version} (${settings.repo})`;
+
+    const kitsu = new Kitsu({
+        headers: {
+            "User-Agent": userAgent
+        }
+    });
 
     // Fetch user info to get the userId
-    const users = await kitsu.get("users", { filter: { name: "Kurozero" } });
+    const users = await kitsu.get("users", {
+        filter: {
+            name: settings.kitsu.username
+        }
+    });
 
     // Fetch currently watching anime
     const library = await kitsu.get("library-entries", {
@@ -72,8 +105,12 @@ async function main() {
     }
 
     // Create rss feed emitter and add nyaa's feed for horriblesubs
-    const rss = new Rss.FeedEmitter();
-    rss.add({ url: "https://nyaa.si/?page=rss&u=HorribleSubs&q=1080", ignoreFirst: true, refresh: 10000 });
+    const rss = new Rss.FeedEmitter({ userAgent });
+    rss.add({
+        url: settings.rss.url,
+        ignoreFirst: settings.rss.ignoreFirst,
+        refresh: settings.rss.refresh
+    });
 
     rss.on("item:new", async (item) => {
         let watching = false;
@@ -100,12 +137,6 @@ async function main() {
                 episode = numbers ? numbers[1] : "00";
             else
                 episode = numbers ? numbers[0] : "00";
-
-            // Temporary debug logs to see if what I did works
-            // console.log(`title: ${title}`);
-            // console.log(`kitsuTitle: ${kitsuTitle}`);
-            // console.log(`episode: ${episode}`);
-            // console.log(`animeTitle: ${animeTitle}`);
 
             // Notification message should look like:
             // <anime_name> episode #<episode_num> just aired
