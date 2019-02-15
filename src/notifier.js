@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const notifier = require("node-notifier");
+const PushNotifications = require("@pusher/push-notifications-server");
 const Kitsu = require("kitsu");
 const Rss = require("rss-emitter-ts");
 const toml = require("toml");
@@ -27,9 +28,9 @@ const { join } = require("path");
 /**
  * Remove horriblesubs and any other stuff from the title
  *
- * @param {string} str The string to strip the horriblsubs garbage from
+ * @param {string} str - The string to strip the horriblsubs garbage from
  *
- * @returns {Promise<string>} returns the stripped string
+ * @returns {Promise<string>} - returns the stripped string
  */
 const stripHorriblesubs = (str) => {
     return new Promise((resolve, reject) => {
@@ -46,8 +47,8 @@ const stripHorriblesubs = (str) => {
 /**
  * Async wrapper for forEach
  *
- * @param {Iterable} a The array to iterate over
- * @param {Function} cb An async callback function
+ * @param {Iterable} a - The array to iterate over
+ * @param {Function} cb - An async callback function
  *
  * @returns {Promise<void>}
  */
@@ -57,16 +58,46 @@ const foreachAsync = async (a, cb) => {
 };
 
 /**
+ * Send a push notification
+ *
+ * @param {PushNotifications} client - The beams client
+ * @param {string} title - Notification title
+ * @param {string} body - Notification body
+ *
+ * @returns {Promise<PushNotifications.PublishResponse>}
+ */
+const sendPushNotification = async (client, title, body) => {
+    try {
+        return await client.publishToInterests(["anime:new"], {
+            fcm: {
+                notification: {
+                    title,
+                    body
+                }
+            }
+        });
+    } catch (error) {
+        throw error;
+    }
+};
+
+/**
  * Main function (using it this way because nodejs does not allow top-level await)
  *
  * @returns {Promise<void>}
  */
 async function main() {
-    const tomlString = readFileSync(join(__dirname, "..", "settings.toml"), { encoding: "utf8" });
-    /** @type {Settings} */
-    const settings = toml.parse(tomlString);
+    const str = readFileSync(join(__dirname, "..", "settings.toml"), { encoding: "utf8" });
+    /** @type {Settings} */ const settings = toml.parse(str);
     const userAgent = `${settings.name}/v${settings.version} (${settings.repo})`;
 
+    // Initiate the beams client
+    const beams = new PushNotifications({
+        instanceId: settings.beams.instanceId,
+        secretKey: settings.beams.secretKey
+    });
+
+    // Initiate the kitsu client
     const kitsu = new Kitsu({
         headers: {
             "User-Agent": userAgent
@@ -148,6 +179,9 @@ async function main() {
                 title: "Anime Notifier",
                 message: `${animeTitle} episode #${episode} just aired\nhttps://horriblesubs.info/shows/${title}#${episode}`
             });
+
+            const response = await sendPushNotification(beams, "Anime Notifier", `${animeTitle} episode #${episode} just aired`);
+            console.log("Just published:", response.publishId);
         }
     });
 
@@ -157,3 +191,8 @@ async function main() {
 main()
     .then(() => console.log("Started!"))
     .catch(console.error);
+
+// Quick access to some commands I always forget
+// sudo systemctl daemon-reload
+// sudo systemctl reload-or-restart anime-notifier.service
+// sudo journalctl -f -u anime-notifier

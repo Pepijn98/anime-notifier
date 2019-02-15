@@ -1,6 +1,6 @@
 name = "Anime Desktop Notifier"
 version = "0.0.1"
-repo = "https://github.com/KurozeroPB/anime-desktop-notifier"
+repo = "https://github.com/KurozeroPB/anime-notifier"
 
 [kitsu]
 username = "Kurozero"

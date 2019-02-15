@@ -13,19 +13,20 @@
   "homepage": "https://kurozeropb.info",
   "bugs": {
     "email": "root@kurozeropb.info",
-    "url": "https://github.com/KurozeroPB/anime-desktop-notifier/issues"
+    "url": "https://github.com/KurozeroPB/anime-notifier/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/KurozeroPB/anime-desktop-notifier.git"
+    "url": "https://github.com/KurozeroPB/anime-notifier.git"
   },
   "scripts": {
     "lint": "eslint .",
     "fix": "eslint . --fix",
-    "start": "yarn lint && node src/app.js",
-    "dev": "node src/app.js"
+    "start": "yarn lint && node src/notifier.js",
+    "dev": "node src/notifier.js"
   },
   "dependencies": {
+    "@pusher/push-notifications-server": "^1.1.1",
     "kitsu": "^6.5.1",
     "node-notifier": "^5.4.0",
     "rss-emitter-ts": "^0.0.5",
