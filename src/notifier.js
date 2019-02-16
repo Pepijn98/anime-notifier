@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const PushNotifications = require("@pusher/push-notifications-server");
 const Kitsu = require("kitsu");
 const Rss = require("rss-emitter-ts");
