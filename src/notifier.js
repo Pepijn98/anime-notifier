@@ -1,6 +1,3 @@
-#!/usr/bin/env node
-
-const notifier = require("node-notifier");
 const PushNotifications = require("@pusher/push-notifications-server");
 const Kitsu = require("kitsu");
 const Rss = require("rss-emitter-ts");
@@ -185,14 +182,6 @@ async function main() {
                 episode = numbers ? numbers[1] : "00";
             else
                 episode = numbers ? numbers[0] : "00";
-
-            // Notification message should look like:
-            // <anime_name> episode #<episode_num> just aired
-            // <url_to_new_episode>
-            notifier.notify({
-                title: "Anime Notifier",
-                message: `${animeTitle} episode #${episode} just aired\nhttps://horriblesubs.info/shows/${title}#${episode}`
-            });
 
             await sendPushNotification(beams, animeTitle, `Episode #${episode} just got uploaded to horriblesubs`);
         }
