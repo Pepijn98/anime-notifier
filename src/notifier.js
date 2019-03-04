@@ -119,7 +119,7 @@ async function main() {
         });
 
         if (watching) {
-            const numbers = original.match(/\d+/);
+            const numbers = original.match(/\d+/g);
             let episode = "";
             if (numbers) {
                 episode = numbers[index] ? numbers[index] : "00";
