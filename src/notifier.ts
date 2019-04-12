@@ -52,20 +52,6 @@ const incrementId = async (): Promise<number> => {
 };
 
 /**
- * Remove unnecessary stuff from the title
- */
-const stripHorriblesubs = (str: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        try {
-            let stripped = str.replace("[HorribleSubs] ", "").replace(/ \[\d{4}p\]\.mkv/, "");
-            resolve(stripped);
-        } catch (e) {
-            reject(e);
-        }
-    });
-};
-
-/**
  * Send a push notification
  */
 const sendPushNotification = async (client: PushNotifications, title: string, body: string): Promise<void> => {
@@ -164,6 +150,13 @@ async function main(): Promise<void> {
     });
 
     rss.on("feed:error", (error: FeedError) => console.error(error.message));
+
+    client.on("ready", () => {
+        console.log(`Logged in as ${client.user.username}`);
+        client.editStatus("online", { name: "waiting for anime to release" });
+    });
+
+    await client.connect();
 }
 
 main()
