@@ -159,9 +159,7 @@ async function main(): Promise<void> {
     await client.connect();
 }
 
-main()
-    .then(() => console.log("Started!"))
-    .catch(console.error);
+main().catch(console.error);
 
 // Quick access to some commands I always forget
 // sudo systemctl daemon-reload
