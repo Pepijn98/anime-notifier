@@ -5,7 +5,7 @@ Description=Anime Notifier
 # User=kurozero
 WorkingDirectory=/home/kurozero/anime-notifier
 # Path to executable.
-ExecStart=/home/kurozero/anime-notifier/src/notifier.js
+ExecStart=/home/kurozero/anime-notifier/src/notifier.ts
 SuccessExitStatus=143
 TimeoutStopSec=10
 Restart=on-failure
