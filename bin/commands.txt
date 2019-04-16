@@ -1,0 +1,5 @@
+Quick access to some commands I always forget
+
+sudo systemctl daemon-reload
+sudo systemctl reload-or-restart anime-notifier
+sudo journalctl -f -u anime-notifier

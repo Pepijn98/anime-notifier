@@ -4,7 +4,7 @@ Description=Anime Notifier
 [Service]
 # User=kurozero
 WorkingDirectory=/home/kurozero/anime-notifier
-# Path to executable.
+Environment=NODE_ENV=production
 ExecStart=/home/kurozero/anime-notifier/src/notifier.ts
 SuccessExitStatus=143
 TimeoutStopSec=10

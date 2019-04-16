@@ -1,23 +1,31 @@
 #!/usr/bin/env ts-node
 
-import { FeedItem, FeedEmitter, FeedError } from "rss-emitter-ts";
-import { Notification, Settings, Anime, ItemContext } from "./interfaces";
-import { promises as fs } from "fs";
-import PushNotifications from "@pusher/push-notifications-server";
-import path from "path";
-import { Client } from "eris";
-import TOML from "toml";
+import * as Sentry from "@sentry/node";
 import Bluebird from "bluebird";
-import TurndownService from "turndown";
+import settings from "../settings";
+import Utils from "./utils/Utils";
 import project from "../package.json";
+import TurndownService from "turndown";
+import PushNotifications from "@pusher/push-notifications-server";
+import { Client } from "eris";
+import { Anime } from "./utils/Interfaces";
+import { FeedItem, FeedEmitter, FeedError } from "rss-emitter-ts";
 
 global.Promise = Bluebird;
 
-const turndown = new TurndownService({
-    headingStyle: "atx",
-    bulletListMarker: "-",
-    codeBlockStyle: "fenced",
-    emDelimiter: "*"
+const userAgent = `${project.name}/v${project.version} (${project.repository.url.replace(".git", "")})`;
+const rss = new FeedEmitter({ userAgent });
+const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced", emDelimiter: "*" });
+const client = new Client(settings.env.startsWith("dev") ? settings.tokens.development : settings.tokens.production);
+const beams = new PushNotifications({ instanceId: settings.beams.instanceId, secretKey: settings.beams.secretKey });
+const utils = new Utils({ client, settings, turndown, beams });
+
+Sentry.init({
+    debug: settings.env.startsWith("dev"),
+    dsn: settings.dsn,
+    release: project.version,
+    environment: settings.env,
+    serverName: "anime-notifier"
 });
 
 turndown.addRule("cite", {
@@ -26,96 +34,9 @@ turndown.addRule("cite", {
 });
 
 /**
- * Async wrapper for forEach
- */
-const foreachAsync = async (a: ArrayLike<any>, cb: Function): Promise<void> => {
-    for (let i = 0; i < a.length; i++)
-        await cb(a[i], i, a);
-};
-
-/**
- * Increment notification number
- */
-const incrementId = async (): Promise<number> => {
-    const json = await fs.readFile(path.join(__dirname, "notificationId.json"), { encoding: "utf8" });
-
-    let notification: Notification = JSON.parse(json);
-    notification.id++;
-
-    // ID 999 is reserved for the default notification when launching the app
-    if (notification.id === 999)
-        notification.id++;
-
-    await fs.writeFile(path.join(__dirname, "notificationId.json"), JSON.stringify(notification), { encoding: "utf8" });
-
-    return notification.id;
-};
-
-/**
- * Send a push notification
- */
-const sendPushNotification = async (client: PushNotifications, title: string, body: string): Promise<void> => {
-    const notificationId = await incrementId();
-    await client.publishToInterests(["anime.new"], {
-        fcm: {
-            notification: {
-                title,
-                body
-            },
-            data: {
-                notificationId
-            }
-        }
-    });
-};
-
-const sendDiscordWebhook = async (client: Client, item: FeedItem, settings: Settings, ctx: ItemContext) => {
-    const description = turndown.turndown(item.description).split("|");
-    const urls = description.splice(0, 2);
-
-    const feeditem = item as any;
-    await client.executeWebhook(settings.webhook.id, settings.webhook.token, {
-        username: client.user.username,
-        avatarURL: client.user.dynamicAvatarURL("png", 512),
-        embeds: [
-            {
-                title: `${ctx.title} #${ctx.title}`,
-                url: `https://horriblesubs.info/shows/${ctx.slug}/#${ctx.episode}`,
-                description: `${urls.join("|")}\n${description.join("\n")}`,
-                color: 0xDC143C,
-                fields: [
-                    {
-                        name: "Seeders",
-                        value: feeditem["nyaa:seeders"]["#"],
-                        inline: true
-                    },
-                    {
-                        name: "Leechers",
-                        value: feeditem["nyaa:leechers"]["#"],
-                        inline: true
-                    },
-                    {
-                        name: "Downloads",
-                        value: feeditem["nyaa:downloads"]["#"],
-                        inline: true
-                    }
-                ],
-                timestamp: item.pubdate ? item.pubdate.toISOString() : ""
-            }
-        ]
-    });
-};
-
-/**
  * Main function (using it this way because nodejs does not allow top-level await)
  */
 async function main(): Promise<void> {
-    const toml = await fs.readFile(path.join(__dirname, "..", "settings.toml"), { encoding: "utf8" });
-    const settings: Settings = TOML.parse(toml);
-    const client = new Client(settings.token);
-    const userAgent = `${project.name}/v${project.version} (${project.repository.url.replace(".git", "")})`;
-    const beams = new PushNotifications({ instanceId: settings.beams.instanceId, secretKey: settings.beams.secretKey });
-    const rss = new FeedEmitter({ userAgent });
     rss.add({ url: settings.rss.url, ignoreFirst: settings.rss.ignoreFirst, refresh: settings.rss.refresh });
 
     rss.on("item:new", async (item: FeedItem) => {
@@ -125,7 +46,7 @@ async function main(): Promise<void> {
         let original = "";
         let index = 0;
 
-        await foreachAsync(settings.anime, async (anime: Anime) => {
+        await utils.foreachAsync(settings.anime, async (anime: Anime) => {
             original = item.title;
             const check = item.title.toLowerCase().replace(/ /g, "-").replace(/---/g, "-");
             if (check.indexOf(anime.slug) !== -1) {
@@ -144,24 +65,26 @@ async function main(): Promise<void> {
                 episode = "00";
             }
 
-            await sendPushNotification(beams, `${title} - ${episode}`, `Episode #${episode} just got uploaded`);
-            await sendDiscordWebhook(client, item, settings, { title, slug, episode });
+            await utils.sendPushNotification(`${title} - ${episode}`, `Episode #${episode} just got uploaded`);
+            await utils.sendDiscordWebhook({ item, title, slug, episode });
         }
     });
 
-    rss.on("feed:error", (error: FeedError) => console.error(error.message));
+    rss.on("feed:error", (error: FeedError) => utils.handleException(error));
 
     client.on("ready", () => {
         console.log(`Logged in as ${client.user.username}`);
         client.editStatus("online", { name: "waiting for anime to release" });
     });
 
+    client.on("error", (error: Error) => utils.handleException(error));
+
+    process.on("SIGINT", () => { // Disconnect from discord when exiting
+        client.disconnect({ reconnect: false });
+        process.exit(0);
+    });
+
     await client.connect();
 }
 
-main().catch(console.error);
-
-// Quick access to some commands I always forget
-// sudo systemctl daemon-reload
-// sudo systemctl reload-or-restart anime-notifier.service
-// sudo journalctl -f -u anime-notifier
+main().catch((error) => utils.handleException(error));

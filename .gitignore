@@ -61,4 +61,4 @@ typings/
 .next
 
 # Application config
-settings.toml
+settings.ts
