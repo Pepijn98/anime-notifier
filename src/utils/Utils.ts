@@ -106,7 +106,7 @@ export default class Utils {
             avatarURL: this.client.user.dynamicAvatarURL("png", 512),
             embeds: [
                 {
-                    title: `${ctx.title} #${ctx.title}`,
+                    title: `${ctx.title} #${ctx.episode}`,
                     url: `https://horriblesubs.info/shows/${ctx.slug}/#${ctx.episode}`,
                     description: `${urls.join("|")}\n${description.join("\n")}`,
                     color: 0xDC143C,
