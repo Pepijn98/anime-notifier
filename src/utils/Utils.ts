@@ -1,12 +1,12 @@
-import * as Sentry from "@sentry/node";
 import os from "os";
 import path from "path";
 import TurndownService from "turndown";
 import PushNotifications from "@pusher/push-notifications-server";
 import { Client } from "eris";
 import { promises as fs } from "fs";
-import { Notification, ItemContext, Settings, Options } from "./Interfaces";
 import { FeedError } from "rss-emitter-ts";
+import { withScope, Scope, captureException } from "@sentry/node";
+import { Notification, ItemContext, Settings, Options } from "./Interfaces";
 
 export default class Utils {
     public client: Client;
@@ -28,7 +28,7 @@ export default class Utils {
         const user = os.userInfo();
         const ips = this._ips();
 
-        Sentry.withScope((scope) => {
+        withScope((scope: Scope) => {
             scope.setUser({
                 id: user.uid.toString(),
                 ip_address: ips.length ? ips[0] : "unkown",
@@ -39,11 +39,11 @@ export default class Utils {
                 const error = exception as FeedError;
                 scope.setExtras({ "feed": error.feed, "type": error.type, "name": error.constructor.name });
                 scope.setTag("type", error.type);
-                Sentry.captureException(error);
+                captureException(error);
             } else {
                 scope.setExtra("name", exception.constructor.name);
                 scope.setTag("type", "generic_error");
-                Sentry.captureException(exception);
+                captureException(exception);
             }
         });
     }
