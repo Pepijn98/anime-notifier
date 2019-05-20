@@ -20,7 +20,7 @@ export interface Anime {
 }
 
 export interface Rss {
-    url: string;
+    urls: string[];
     ignoreFirst: boolean;
     refresh: number;
 }

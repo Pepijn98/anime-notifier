@@ -100,30 +100,29 @@ export default class Utils {
         const description = this.turndown.turndown(ctx.item.description).split("|");
         const urls = description.splice(0, 2);
 
-        const feeditem = ctx.item as any;
         await this.client.executeWebhook(this.settings.webhook.id, this.settings.webhook.token, {
             username: this.client.user.username,
             avatarURL: this.client.user.dynamicAvatarURL("png", 512),
             embeds: [
                 {
                     title: `${ctx.title} #${ctx.episode}`,
-                    url: `https://horriblesubs.info/shows/${ctx.slug}/#${ctx.episode}`,
+                    url: ctx.item.title.toLowerCase().indexOf("horriblesubs") !== -1 ? `https://horriblesubs.info/shows/${ctx.slug}/#${ctx.episode}` : "",
                     description: `${urls.join("|")}\n${description.join("\n")}`,
                     color: 0xDC143C,
                     fields: [
                         {
                             name: "Seeders",
-                            value: feeditem["nyaa:seeders"]["#"],
+                            value: ctx.item["nyaa:seeders"]["#"],
                             inline: true
                         },
                         {
                             name: "Leechers",
-                            value: feeditem["nyaa:leechers"]["#"],
+                            value: ctx.item["nyaa:leechers"]["#"],
                             inline: true
                         },
                         {
                             name: "Downloads",
-                            value: feeditem["nyaa:downloads"]["#"],
+                            value: ctx.item["nyaa:downloads"]["#"],
                             inline: true
                         }
                     ],

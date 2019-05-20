@@ -37,7 +37,10 @@ turndown.addRule("cite", {
  * Main function (using it this way because nodejs does not allow top-level await)
  */
 async function main(): Promise<void> {
-    rss.add({ url: settings.rss.url, ignoreFirst: settings.rss.ignoreFirst, refresh: settings.rss.refresh });
+    // Add all feeds to the rss emitter
+    for (let i = 0; i < settings.rss.urls.length; i++) {
+        rss.add({ url: settings.rss.urls[i], ignoreFirst: settings.rss.ignoreFirst, refresh: settings.rss.refresh });
+    }
 
     rss.on("item:new", async (item: FeedItem) => {
         let watching = false;
