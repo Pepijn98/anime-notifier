@@ -17,6 +17,7 @@ export interface ItemContext {
 export interface Anime {
     title: string;
     slug: string;
+    feed: string;
 }
 
 export interface Rss {
