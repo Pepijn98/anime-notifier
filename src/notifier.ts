@@ -44,15 +44,19 @@ async function main(): Promise<void> {
 
     rss.on("item:new", async (item: FeedItem) => {
         let watching = false;
-        let anime: null|Anime = null;
+        let title = "";
+        let slug = "";
+        let feed = "";
         let original = "";
         let index = 0;
 
-        await utils.foreachAsync(settings.anime, async (a: Anime) => {
+        await utils.foreachAsync(settings.anime, async (anime: Anime) => {
             original = item.title;
             const check = item.title.toLowerCase().replace(/ /g, "-").replace(/---/g, "-");
-            if (check.indexOf(a.slug) !== -1) {
-                anime = a
+            if (check.indexOf(anime.slug) !== -1) {
+                title = anime.title;
+                slug = anime.slug;
+                feed = anime.feed;
                 watching = true;
             }
         });
@@ -66,13 +70,11 @@ async function main(): Promise<void> {
                 episode = "00";
             }
 
-            if (anime) {
-                const isHorribleSubs = anime.feed === "hs" && item.title.toLowerCase().indexOf("horriblesubs") !== -1;
-                const isAnimeFreak = anime.feed === "af" && item.title.toLowerCase().indexOf("animefreak") !== -1;
-                if (isHorribleSubs || isAnimeFreak) {
-                    await utils.sendPushNotification(`${anime.title} - ${episode}`, `Episode #${episode} just got uploaded`);
-                    await utils.sendDiscordWebhook({ item, episode, title: anime.title, slug: anime.slug });
-                }
+            const isHorribleSubs = feed === "hs" && item.title.toLowerCase().indexOf("horriblesubs") !== -1;
+            const isAnimeFreak = feed === "af" && item.title.toLowerCase().indexOf("animefreak") !== -1;
+            if (isHorribleSubs || isAnimeFreak) {
+                await utils.sendPushNotification(`${title} - ${episode}`, `Episode #${episode} just got uploaded`);
+                await utils.sendDiscordWebhook({ item, title, slug, episode });
             }
         }
     });
