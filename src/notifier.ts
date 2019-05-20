@@ -44,7 +44,7 @@ async function main(): Promise<void> {
 
     rss.on("item:new", async (item: FeedItem) => {
         let watching = false;
-        let anime: Anime = null;
+        let anime: null|Anime = null;
         let original = "";
         let index = 0;
 
@@ -66,11 +66,13 @@ async function main(): Promise<void> {
                 episode = "00";
             }
 
-            const isHorribleSubs = anime.feed === "hs" && item.title.toLowerCase().indexOf("horriblesubs") !== -1;
-            const isAnimeFreak = anime.feed === "af" && item.title.toLowerCase().indexOf("animefreak") !== -1;
-            if (anime && isHorribleSubs || isAnimeFreak) {
-                await utils.sendPushNotification(`${anime.title} - ${episode}`, `Episode #${episode} just got uploaded`);
-                await utils.sendDiscordWebhook({ item, episode, title: anime.title, slug: anime.slug });
+            if (anime) {
+                const isHorribleSubs = anime.feed === "hs" && item.title.toLowerCase().indexOf("horriblesubs") !== -1;
+                const isAnimeFreak = anime.feed === "af" && item.title.toLowerCase().indexOf("animefreak") !== -1;
+                if (isHorribleSubs || isAnimeFreak) {
+                    await utils.sendPushNotification(`${anime.title} - ${episode}`, `Episode #${episode} just got uploaded`);
+                    await utils.sendDiscordWebhook({ item, episode, title: anime.title, slug: anime.slug });
+                }
             }
         }
     });
