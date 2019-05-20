@@ -1,6 +1,6 @@
 {
   "name": "anime-notifier",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Get a mobile push notification when an anime you're watching has aired a new episode",
   "author": {
     "email": "root@kurozeropb.info",
@@ -26,19 +26,19 @@
     "dev": "NODE_ENV=development ./src/notifier.ts"
   },
   "dependencies": {
-    "@pusher/push-notifications-server": "^1.1.1",
-    "@sentry/node": "5.0.8",
+    "@pusher/push-notifications-server": "^1.2.0",
+    "@sentry/node": "5.2.0",
     "bluebird": "^3.5.4",
     "eris": "^0.9.0",
-    "rss-emitter-ts": "^0.1.5",
+    "rss-emitter-ts": "^0.2.2",
     "turndown": "^5.0.3"
   },
   "devDependencies": {
-    "@types/node": "^11.13.4",
+    "@types/node": "^12.0.2",
     "@types/turndown": "^5.0.0",
-    "eslint": "^5.13.0",
-    "gts": "^0.9.0",
-    "ts-node": "^8.0.3",
-    "typescript": "^3.4.3"
+    "eslint": "^5.16.0",
+    "gts": "^1.0.0",
+    "ts-node": "^8.1.0",
+    "typescript": "^3.4.5"
   }
 }
