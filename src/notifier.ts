@@ -7,12 +7,13 @@ import Utils from "./utils/Utils";
 import project from "../package.json";
 import TurndownService from "turndown";
 import PushNotifications from "@pusher/push-notifications-server";
-import { Client } from "eris";
+import { Client, Message } from "eris";
 import { Anime } from "./utils/Interfaces";
 import { FeedItem, FeedEmitter, FeedError } from "rss-emitter-ts";
 
 global.Promise = Bluebird;
 
+const prefix = "r/";
 const userAgent = `${project.name}/v${project.version} (${project.repository.url.replace(".git", "")})`;
 const rss = new FeedEmitter({ userAgent });
 const turndown = new TurndownService({ headingStyle: "atx", bulletListMarker: "-", codeBlockStyle: "fenced", emDelimiter: "*" });
@@ -32,6 +33,10 @@ turndown.addRule("cite", {
     filter: ["cite"],
     replacement: (content: string) => `*${content}*`
 });
+
+function isOK(msg: Message) {
+    return msg.author && msg.author.id !== client.user.id && !msg.author.bot
+}
 
 /**
  * Main function (using it this way because nodejs does not allow top-level await)
@@ -84,6 +89,25 @@ async function main(): Promise<void> {
     client.on("ready", () => {
         console.log(`Logged in as ${client.user.username}`);
         client.editStatus("online", { name: "waiting for anime to release" });
+    });
+
+    client.on("messageCreate", (msg) => {
+        if (msg.content.startsWith(prefix) && isOK(msg)) {
+            const sliced = msg.content.slice(prefix.length, msg.content.length);
+            const args = sliced.split(" ");
+            const command = args.shift();
+            switch (command) {
+                case "ping": {
+                    msg.channel.createMessage("pong!");
+                    break;
+                }
+                case "list": {
+                    const anime = settings.anime.map((a) => `**${a.title}** (${a.feed})`);
+                    msg.channel.createMessage(anime.join("\n"));
+                    break;
+                }
+            }
+        }
     });
 
     client.on("error", (error: Error) => utils.handleException(error));
